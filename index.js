@@ -1,16 +1,67 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const {
+  Client,
+  GatewayIntentBits,
+  SlashCommandBuilder,
+  EmbedBuilder,
+  REST,
+  Routes,
+} = require('discord.js');
 
-module.exports = {
-  data: new SlashCommandBuilder()
+// ─────────────────────────────
+// ENV VARIABLES (Railway)
+// ─────────────────────────────
+const TOKEN = process.env.DISCORD_TOKEN;
+const CLIENT_ID = process.env.CLIENT_ID;
+
+// Safety check
+if (!TOKEN || !CLIENT_ID) {
+  console.error('❌ Missing DISCORD_TOKEN or CLIENT_ID env variables');
+  process.exit(1);
+}
+
+// ─────────────────────────────
+// CLIENT
+// ─────────────────────────────
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds],
+});
+
+// ─────────────────────────────
+// SLASH COMMANDS
+// ─────────────────────────────
+const commands = [
+  new SlashCommandBuilder()
     .setName('rules')
     .setDescription('View the server rules'),
+].map(cmd => cmd.toJSON());
 
-  async execute(interaction) {
+// Register slash commands
+const rest = new REST({ version: '10' }).setToken(TOKEN);
+
+(async () => {
+  try {
+    await rest.put(
+      Routes.applicationCommands(CLIENT_ID),
+      { body: commands }
+    );
+    console.log('✅ Slash commands registered');
+  } catch (error) {
+    console.error('❌ Failed to register commands:', error);
+  }
+})();
+
+// ─────────────────────────────
+// INTERACTIONS
+// ─────────────────────────────
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === 'rules') {
     const rulesEmbed = new EmbedBuilder()
       .setTitle('📜 Server Rules')
       .setDescription(
         '**Welcome to the server!**\n\n' +
-        'Please read and follow all rules listed below. Failure to comply may result in moderation action.'
+        'By playing here, you agree to follow all rules listed below.'
       )
       .addFields(
         {
@@ -18,35 +69,45 @@ module.exports = {
           value:
             '• No RDM / VDM\n' +
             '• Stay realistic at all times\n' +
-            '• Follow ER:LC & server RP guidelines\n' +
-            '• FearRP is mandatory',
+            '• FearRP is mandatory\n' +
+            '• Follow ER:LC rules',
         },
         {
-          name: '👮 Conduct Rules',
+          name: '👮 Conduct',
           value:
-            '• Respect all members and staff\n' +
-            '• No trolling or fail RP\n' +
-            '• Listen to staff decisions\n' +
-            '• No exploiting or abusing mechanics',
+            '• Respect all members\n' +
+            '• Follow staff instructions\n' +
+            '• No trolling or fail RP',
         },
         {
-          name: '📌 General Rules',
+          name: '📌 General',
           value:
             '• No harassment or discrimination\n' +
-            '• No spamming or advertising\n' +
-            '• Keep chat appropriate\n' +
+            '• No exploiting\n' +
             '• Use common sense',
         }
       )
-      .setImage('https://i.pinimg.com/originals/73/0b/8e/730b8eb30cb038e5ff87b1072b9ad2c8.jpg')
+      .setImage(
+        'https://i.pinimg.com/originals/73/0b/8e/730b8eb30cb038e5ff87b1072b9ad2c8.jpg'
+      )
       .setColor(0x2f3136)
       .setFooter({
-        text: 'By playing here, you agree to follow all server rules.',
+        text: 'Failure to follow rules may result in punishment.',
       })
       .setTimestamp();
 
-    await interaction.reply({
-      embeds: [rulesEmbed],
-    });
-  },
-};
+    await interaction.reply({ embeds: [rulesEmbed] });
+  }
+});
+
+// ─────────────────────────────
+// READY
+// ─────────────────────────────
+client.once('ready', () => {
+  console.log(`🤖 Logged in as ${client.user.tag}`);
+});
+
+// ─────────────────────────────
+// LOGIN
+// ─────────────────────────────
+client.login(TOKEN);

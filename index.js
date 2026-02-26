@@ -17,7 +17,7 @@ const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 
 // 🔴 CHANGE THIS
-const VERIFIED_ROLE_ID = 'PUT_ROLE_ID_HERE';
+const VERIFIED_ROLE_ID = '1476417048518070324';
 
 // ⏱️ Mute length for "I don't agree" (in milliseconds)
 const DENY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
@@ -238,4 +238,5 @@ client.once('ready', () => {
 });
 
 client.login(TOKEN);
+
 

@@ -17,7 +17,10 @@ const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 
 // 🔴 CHANGE THIS
-const VERIFIED_ROLE_ID = '1475962236320223445';
+const VERIFIED_ROLE_ID = 'PUT_ROLE_ID_HERE';
+
+// ⏱️ Mute length for "I don't agree" (in milliseconds)
+const DENY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
 if (!TOKEN || !CLIENT_ID) {
   console.error('❌ Missing DISCORD_TOKEN or CLIENT_ID env variables');
@@ -44,15 +47,17 @@ const commands = [
         .setDescription('Staff member you are reviewing')
         .setRequired(true)
     ),
-].map(c => c.toJSON());
+].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
-  await rest.put(Routes.applicationCommands(CLIENT_ID), {
-    body: commands,
-  });
-  console.log('✅ Slash commands registered');
+  try {
+    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+    console.log('✅ Slash commands registered');
+  } catch (err) {
+    console.error('❌ Slash command registration failed:', err);
+  }
 })();
 
 /* ───────── INTERACTIONS ───────── */
@@ -63,57 +68,89 @@ client.on('interactionCreate', async interaction => {
     const rulesEmbed = new EmbedBuilder()
       .setTitle('📜 Server Rules')
       .setDescription(
-        '**By playing here, you agree to the following rules.**\n\n' +
-        'Failure to comply may result in punishment.'
+        '**By playing in this server, you agree to follow all rules below.**\n\n' +
+        'Failure to comply may result in moderation action.'
       )
       .addFields(
         {
-          name: '🚓 Roleplay',
+          name: '🚓 Roleplay Rules',
           value:
             '• No RDM / VDM\n' +
             '• Realistic RP only\n' +
             '• FearRP is mandatory\n' +
-            '• Follow ER:LC rules',
+            '• Follow ER:LC & server guidelines',
         },
         {
-          name: '👮 Conduct',
+          name: '👮 Conduct Rules',
           value:
-            '• Respect everyone\n' +
+            '• Respect all members\n' +
             '• Follow staff instructions\n' +
-            '• No fail RP or trolling',
+            '• No trolling, exploiting, or fail RP',
         }
       )
       .setImage(
         'https://i.pinimg.com/originals/73/0b/8e/730b8eb30cb038e5ff87b1072b9ad2c8.jpg'
       )
       .setColor(0x2f3136)
-      .setFooter({ text: 'Click below to agree and gain access.' });
+      .setFooter({ text: 'Choose an option below to continue.' })
+      .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('agree_rules')
         .setLabel('✅ I Agree')
-        .setStyle(ButtonStyle.Success)
+        .setStyle(ButtonStyle.Success),
+
+      new ButtonBuilder()
+        .setCustomId('deny_rules')
+        .setLabel('❌ I Don’t Agree')
+        .setStyle(ButtonStyle.Danger)
     );
 
-    return interaction.reply({ embeds: [rulesEmbed], components: [row] });
+    return interaction.reply({
+      embeds: [rulesEmbed],
+      components: [row],
+    });
   }
 
-  /* ── Rules Button ── */
+  /* ── Agree Button ── */
   if (interaction.isButton() && interaction.customId === 'agree_rules') {
     const role = interaction.guild.roles.cache.get(VERIFIED_ROLE_ID);
     if (!role) {
       return interaction.reply({
-        content: '❌ Role not found. Contact staff.',
+        content: '❌ Verified role not found. Contact staff.',
         ephemeral: true,
       });
     }
 
     await interaction.member.roles.add(role);
+
     return interaction.reply({
-      content: '✅ You now have access to the server.',
+      content: '✅ You have agreed to the rules and now have access.',
       ephemeral: true,
     });
+  }
+
+  /* ── Deny Button (Auto Mute) ── */
+  if (interaction.isButton() && interaction.customId === 'deny_rules') {
+    try {
+      await interaction.member.timeout(
+        DENY_TIMEOUT_MS,
+        'Did not agree to server rules'
+      );
+
+      return interaction.reply({
+        content:
+          '❌ You did not agree to the rules and have been temporarily muted.',
+        ephemeral: true,
+      });
+    } catch (err) {
+      return interaction.reply({
+        content:
+          '❌ Unable to mute you. Please contact staff.',
+        ephemeral: true,
+      });
+    }
   }
 
   /* ── /staffreview ── */
@@ -128,7 +165,7 @@ client.on('interactionCreate', async interaction => {
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
           .setCustomId('experience')
-          .setLabel('Describe your experience')
+          .setLabel('Describe your experience (mentions allowed)')
           .setStyle(TextInputStyle.Paragraph)
           .setRequired(true)
       ),
@@ -151,23 +188,17 @@ client.on('interactionCreate', async interaction => {
     return interaction.showModal(modal);
   }
 
-  /* ── Modal Submit ── */
+  /* ── Staff Review Modal Submit ── */
   if (interaction.isModalSubmit() && interaction.customId.startsWith('staffreview_')) {
     const staffId = interaction.customId.split('_')[1];
     const staff = await client.users.fetch(staffId);
 
     const embed = new EmbedBuilder()
-      .setTitle('📝 Staff Review Submitted')
+      .setTitle('📝 Staff Review')
       .setThumbnail(staff.displayAvatarURL({ dynamic: true }))
       .addFields(
-        {
-          name: '👤 Staff Member',
-          value: `<@${staff.id}>`,
-        },
-        {
-          name: '✍ Reviewer',
-          value: `<@${interaction.user.id}>`,
-        },
+        { name: '👤 Staff Member', value: `<@${staff.id}>` },
+        { name: '✍ Reviewer', value: `<@${interaction.user.id}>` },
         {
           name: '📖 Experience',
           value: interaction.fields.getTextInputValue('experience'),
@@ -179,23 +210,22 @@ client.on('interactionCreate', async interaction => {
         {
           name: '⚠ Improvements',
           value:
-            interaction.fields.getTextInputValue('improvements') || 'None provided',
+            interaction.fields.getTextInputValue('improvements') ||
+            'None provided',
         }
       )
       .setColor(0x5865f2)
       .setTimestamp();
 
-    // 🔴 CHANGE CHANNEL ID
-    const reviewChannel = interaction.guild.channels.cache.get(
-      'PUT_REVIEW_CHANNEL_ID_HERE'
-    );
-
-    if (reviewChannel) {
-      reviewChannel.send({ embeds: [embed] });
-    }
+    await interaction.channel.send({
+      embeds: [embed],
+      allowedMentions: {
+        parse: ['users', 'roles'],
+      },
+    });
 
     return interaction.reply({
-      content: '✅ Your staff review has been submitted.',
+      content: '✅ Your staff review has been posted.',
       ephemeral: true,
     });
   }
@@ -208,3 +238,4 @@ client.once('ready', () => {
 });
 
 client.login(TOKEN);
+

@@ -143,114 +143,12 @@ client.on('interactionCreate', async interaction => {
     return interaction.editReply({ content: '✅ Review submitted.' });
   }
 
-  /* ───── /MODCALL ───── */
-  if (interaction.isChatInputCommand() && interaction.commandName === 'modcall') {
-    const modal = new ModalBuilder().setCustomId('modcall_modal').setTitle('🚨 Mod Call');
-
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder()
-          .setCustomId('reason')
-          .setLabel('Reason (you may @ people)')
-          .setStyle(TextInputStyle.Paragraph)
-          .setRequired(true)
-      )
-    );
-
-    return interaction.showModal(modal);
-  }
-
-  if (interaction.isModalSubmit() && interaction.customId === 'modcall_modal') {
-    await interaction.deferReply({ ephemeral: true });
-
-    const reason = interaction.fields.getTextInputValue('reason');
-    modCalls.push({ user: interaction.user, reason });
-
-    const embed = new EmbedBuilder()
-      .setTitle('🚨 MOD CALL')
-      .setThumbnail(interaction.user.displayAvatarURL())
-      .addFields(
-        { name: 'Caller', value: interaction.user.toString() },
-        { name: 'Reason', value: reason }
-      )
-      .setColor(0xff0000)
-      .setTimestamp();
-
-    await logChannel.send({ content: `<@&${STAFF_ROLE_ID}>`, embeds: [embed] });
-    return interaction.editReply({ content: '✅ Mod call sent.' });
-  }
-
-  /* ───── /KILLLOG ───── */
-  if (interaction.isChatInputCommand() && interaction.commandName === 'killlog') {
-    const modal = new ModalBuilder().setCustomId('killlog_modal').setTitle('💀 Kill Log');
-
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('killer').setLabel('Killer').setStyle(TextInputStyle.Short)),
-      new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('victim').setLabel('Victim').setStyle(TextInputStyle.Short)),
-      new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('weapon').setLabel('Weapon').setStyle(TextInputStyle.Short))
-    );
-
-    return interaction.showModal(modal);
-  }
-
-  if (interaction.isModalSubmit() && interaction.customId === 'killlog_modal') {
-    await interaction.deferReply({ ephemeral: true });
-
-    const killer = interaction.fields.getTextInputValue('killer');
-    const victim = interaction.fields.getTextInputValue('victim');
-    const weapon = interaction.fields.getTextInputValue('weapon');
-
-    killLogs.unshift({ killer, victim, weapon });
-    if (killLogs.length > 10) killLogs.pop();
-
-    const embed = new EmbedBuilder()
-      .setTitle('💀 Kill Log')
-      .addFields(
-        { name: 'Killer', value: killer, inline: true },
-        { name: 'Victim', value: victim, inline: true },
-        { name: 'Weapon', value: weapon }
-      )
-      .setColor(0x2f3136)
-      .setTimestamp();
-
-    await logChannel.send({ embeds: [embed] });
-    return interaction.editReply({ content: '✅ Kill logged.' });
-  }
-
-  /* ───── /MODCALLS ───── */
-  if (interaction.isChatInputCommand() && interaction.commandName === 'modcalls') {
-    await interaction.deferReply({ ephemeral: true });
-
-    const embed = new EmbedBuilder()
-      .setTitle('🚨 Active Mod Calls')
-      .setDescription(
-        modCalls.length
-          ? modCalls.map((c, i) => `**${i + 1}. ${c.user.tag}**\n${c.reason}`).join('\n\n')
-          : 'No active mod calls.'
-      )
-      .setColor(0xff0000);
-
-    return interaction.editReply({ embeds: [embed] });
-  }
-
-  /* ───── /KILLLOGS ───── */
-  if (interaction.isChatInputCommand() && interaction.commandName === 'killlogs') {
-    await interaction.deferReply({ ephemeral: true });
-
-    const embed = new EmbedBuilder()
-      .setTitle('💀 Recent Kill Logs')
-      .setDescription(
-        killLogs.length
-          ? killLogs.map(k => `**${k.killer} → ${k.victim}**\nWeapon: ${k.weapon}`).join('\n\n')
-          : 'No kill logs.'
-      )
-      .setColor(0x2f3136);
-
-    return interaction.editReply({ embeds: [embed] });
+  
   }
 });
 
 client.login(TOKEN);
+
 
 
 

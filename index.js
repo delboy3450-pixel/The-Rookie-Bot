@@ -18,7 +18,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 
 const LOG_CHANNEL_ID = '1476418506055749843';
 const STAFF_ROLE_ID = '1476414879626956931';
-const VERIFIED_ROLE_ID = 'PUT_VERIFIED_ROLE_ID_HERE';
+const VERIFIED_ROLE_ID = '1476417048518070324';
 
 const DENY_TIMEOUT_MS = 10 * 60 * 1000;
 
@@ -251,6 +251,7 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 

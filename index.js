@@ -25,7 +25,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 
 const STAFF_ROLE_ID = "1476733750543909047";
 const TICKET_CATEGORY_ID = "1476753645864357990";
-
+const STAFF_REVIEW_CHANNEL_ID ="1476991236085907456";
 // ================= RULE TEXT =================
 
 const DISCORD_RULES = `
@@ -75,7 +75,7 @@ Unrealistic behaviour is prohibited.
 Events before death are forgotten.
 
 ✅ **Emergency Services Conduct**  
-Follow new york procedures.
+Follow UK procedures.
 
 ✅ **No Metagaming**  
 OOC info may not be used IC.
@@ -267,6 +267,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 

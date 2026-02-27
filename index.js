@@ -24,8 +24,8 @@ const client = new Client({
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 
-const STAFF_ROLE_ID = "PUT_STAFF_ROLE_ID_HERE";
-const TICKET_CATEGORY_ID = "PUT_CATEGORY_ID_HERE";
+const STAFF_ROLE_ID = "1476733750543909047";
+const TICKET_CATEGORY_ID = "1476753645864357990";
 
 // ================= RULE CONTENT =================
 
@@ -201,6 +201,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 

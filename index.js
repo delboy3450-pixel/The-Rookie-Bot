@@ -92,7 +92,7 @@ function buildRulesPanel(type = "discord") {
     .setTitle("Boroughs of London Roleplay")
     .setImage("https://images.unsplash.com/photo-1505761671935-60b3a7427bad?q=80&w=1200&auto=format&fit=crop")
     .setDescription(type === "discord" ? DISCORD_RULES : RP_RULES)
-    .setFooter({ text: "Boroughs of London RP • Official Rules" });
+    .setFooter({ text: "New York State Roleplay • Official Rules" });
 
   const menu = new StringSelectMenuBuilder()
     .setCustomId("rules_select")
@@ -267,6 +267,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 

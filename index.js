@@ -26,7 +26,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const STAFF_ROLE_ID = "1476733750543909047";
 const TICKET_CATEGORY_ID = "1476753645864357990";
 
-// ================= RULE TEXT (TICK STYLE) =================
+// ================= RULE TEXT =================
 
 const DISCORD_RULES = `
 ### 📜 Discord Rules
@@ -35,19 +35,19 @@ const DISCORD_RULES = `
 No harassment, discrimination, or hate speech.
 
 ✅ **No Toxic Behaviour**  
-Threats, baiting, trolling, or excessive arguing is prohibited.
+No threats, baiting, or trolling.
 
 ✅ **Appropriate Content Only**  
 No NSFW, illegal, or extremist content.
 
 ✅ **No Spam or Advertising**  
-Including DMs or links without permission.
+Without staff permission.
 
 ✅ **Follow Staff Instructions**  
-Staff decisions are final. Open a ticket if needed.
+Staff decisions are final.
 
 ✅ **Use Correct Channels**  
-Post content where it belongs.
+Post where content belongs.
 
 ✅ **No Exploits or Abuse**  
 Do not abuse bugs or permissions.
@@ -60,28 +60,28 @@ const RP_RULES = `
 ### 🚓 Roleplay Rules
 
 ✅ **Realistic UK Roleplay**  
-All scenarios must reflect realistic UK standards.
+UK-based realistic scenarios only.
 
 ✅ **No RDM / VDM**  
-Violence requires valid roleplay reasoning.
+Violence requires roleplay reasoning.
 
 ✅ **Value Your Life**  
-Fear RP is mandatory at all times.
+Fear RP is mandatory.
 
 ✅ **No Fail RP**  
-Unrealistic actions are not allowed.
+Unrealistic behaviour is prohibited.
 
 ✅ **New Life Rule**  
-Previous events are forgotten after death.
+Events before death are forgotten.
 
 ✅ **Emergency Services Conduct**  
-Follow correct UK procedures.
+Follow UK procedures.
 
 ✅ **No Metagaming**  
-OOC information cannot be used IC.
+OOC info may not be used IC.
 
 ✅ **Staff Authority**  
-Staff may intervene at any time.
+Staff may intervene anytime.
 `;
 
 // ================= RULES PANEL =================
@@ -113,7 +113,7 @@ function buildRulesPanel(type = "discord") {
 const commands = [
   new SlashCommandBuilder()
     .setName("panel")
-    .setDescription("Send the rules onboarding panel")
+    .setDescription("Send the rules panel")
     .addChannelOption(o =>
       o.setName("channel")
         .setDescription("Channel to send the panel")
@@ -132,10 +132,6 @@ const commands = [
     ),
 
   new SlashCommandBuilder()
-    .setName("ticket")
-    .setDescription("Open a support ticket"),
-
-  new SlashCommandBuilder()
     .setName("staffreview")
     .setDescription("Leave a staff review"),
 ].map(c => c.toJSON());
@@ -149,65 +145,38 @@ const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 client.on("interactionCreate", async interaction => {
 
-  if (interaction.isChatInputCommand()) {
-
-    if (interaction.commandName === "panel") {
-      const channel = interaction.options.getChannel("channel");
-      await channel.send(buildRulesPanel());
-      return interaction.reply({ content: "✅ Rules panel sent.", ephemeral: true });
-    }
-
-    if (interaction.commandName === "ticketpanel") {
-      const embed = new EmbedBuilder()
-        .setColor(0x2b2d31)
-        .setTitle("🎫 Support Tickets")
-        .setDescription("Click below to open a support ticket.");
-
-      const button = new ButtonBuilder()
-        .setCustomId("open_ticket")
-        .setLabel("Open Ticket")
-        .setStyle(ButtonStyle.Primary);
-
-      await interaction.options.getChannel("channel").send({
-        embeds: [embed],
-        components: [new ActionRowBuilder().addComponents(button)],
-      });
-
-      return interaction.reply({ content: "✅ Ticket panel sent.", ephemeral: true });
-    }
-
-    if (interaction.commandName === "ticket") {
-      interaction.customId = "open_ticket";
-    }
-
-    if (interaction.commandName === "staffreview") {
-      const modal = new ModalBuilder()
-        .setCustomId("staff_review")
-        .setTitle("Staff Review");
-
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("staff")
-            .setLabel("Staff Member (@mention)")
-            .setStyle(TextInputStyle.Short)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId("review")
-            .setLabel("Your Review")
-            .setStyle(TextInputStyle.Paragraph)
-        )
-      );
-
-      return interaction.showModal(modal);
-    }
+  // /panel
+  if (interaction.isChatInputCommand() && interaction.commandName === "panel") {
+    await interaction.options.getChannel("channel").send(buildRulesPanel());
+    return interaction.reply({ content: "✅ Rules panel sent.", ephemeral: true });
   }
 
+  // /ticketpanel
+  if (interaction.isChatInputCommand() && interaction.commandName === "ticketpanel") {
+    const embed = new EmbedBuilder()
+      .setColor(0x2b2d31)
+      .setTitle("🎫 Support Tickets")
+      .setDescription("Click below to open a support ticket.");
+
+    const button = new ButtonBuilder()
+      .setCustomId("open_ticket")
+      .setLabel("Open Ticket")
+      .setStyle(ButtonStyle.Primary);
+
+    await interaction.options.getChannel("channel").send({
+      embeds: [embed],
+      components: [new ActionRowBuilder().addComponents(button)],
+    });
+
+    return interaction.reply({ content: "✅ Ticket panel sent.", ephemeral: true });
+  }
+
+  // RULE DROPDOWN
   if (interaction.isStringSelectMenu() && interaction.customId === "rules_select") {
     return interaction.update(buildRulesPanel(interaction.values[0]));
   }
 
+  // OPEN TICKET
   if (interaction.isButton() && interaction.customId === "open_ticket") {
     const channel = await interaction.guild.channels.create({
       name: `ticket-${interaction.user.username}`,
@@ -221,6 +190,7 @@ client.on("interactionCreate", async interaction => {
     });
 
     const buttons = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("claim").setLabel("Claim").setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId("lock").setLabel("Lock").setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId("close").setLabel("Close").setStyle(ButtonStyle.Danger),
     );
@@ -229,6 +199,25 @@ client.on("interactionCreate", async interaction => {
     return interaction.reply({ content: `Ticket created: ${channel}`, ephemeral: true });
   }
 
+  // CLAIM
+  if (interaction.isButton() && interaction.customId === "claim") {
+    if (!interaction.member.roles.cache.has(STAFF_ROLE_ID)) {
+      return interaction.reply({ content: "❌ Only staff can claim tickets.", ephemeral: true });
+    }
+
+    await interaction.channel.permissionOverwrites.edit(STAFF_ROLE_ID, { SendMessages: false });
+    await interaction.channel.permissionOverwrites.edit(interaction.user.id, { SendMessages: true });
+
+    return interaction.reply(`🟢 Ticket claimed by ${interaction.user}`);
+  }
+
+  // LOCK
+  if (interaction.isButton() && interaction.customId === "lock") {
+    await interaction.channel.permissionOverwrites.edit(STAFF_ROLE_ID, { SendMessages: false });
+    return interaction.reply("🔒 Ticket locked.");
+  }
+
+  // CLOSE
   if (interaction.isButton() && interaction.customId === "close") {
     const embed = new EmbedBuilder()
       .setColor(0x2b2d31)
@@ -236,6 +225,30 @@ client.on("interactionCreate", async interaction => {
 
     await interaction.channel.send({ embeds: [embed] });
     setTimeout(() => interaction.channel.delete(), 5000);
+  }
+
+  // STAFF REVIEW
+  if (interaction.isChatInputCommand() && interaction.commandName === "staffreview") {
+    const modal = new ModalBuilder()
+      .setCustomId("staff_review")
+      .setTitle("Staff Review");
+
+    modal.addComponents(
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId("staff")
+          .setLabel("Staff Member (@mention)")
+          .setStyle(TextInputStyle.Short)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId("review")
+          .setLabel("Your Review")
+          .setStyle(TextInputStyle.Paragraph)
+      )
+    );
+
+    return interaction.showModal(modal);
   }
 
   if (interaction.isModalSubmit() && interaction.customId === "staff_review") {

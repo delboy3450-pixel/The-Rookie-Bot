@@ -75,7 +75,7 @@ Unrealistic behaviour is prohibited.
 Events before death are forgotten.
 
 ✅ **Emergency Services Conduct**  
-Follow UK procedures.
+Follow new york procedures.
 
 ✅ **No Metagaming**  
 OOC info may not be used IC.
@@ -267,6 +267,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 

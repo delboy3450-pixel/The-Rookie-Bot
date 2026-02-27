@@ -90,7 +90,7 @@ function buildRulesPanel(type = "discord") {
   const embed = new EmbedBuilder()
     .setColor(0x2b2d31)
     .setTitle("New York State Roleplay")
-    .setImage("https://sl.bing.net/hd6VCVlDbZ6")
+    .setImage("https://cdn.discordapp.com/attachments/1476976362584801380/1477046581521023088/new_york.png?ex=69a35653&is=69a204d3&hm=bdaafc9cc42b242c533d613213b640d04d18d35185aebda8b87c0d3465b34ea3&")
     .setDescription(type === "discord" ? DISCORD_RULES : RP_RULES)
     .setFooter({ text: "New York State Roleplay • Official Rules" });
 
@@ -267,6 +267,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 

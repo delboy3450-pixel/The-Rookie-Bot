@@ -7,18 +7,17 @@ const {
   EmbedBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
-  ChannelSelectMenuBuilder,
-  ChannelType,
   ButtonBuilder,
   ButtonStyle,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  ChannelType,
   PermissionsBitField,
 } = require("discord.js");
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
 
 const TOKEN = process.env.DISCORD_TOKEN;
@@ -27,77 +26,80 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const STAFF_ROLE_ID = "1476733750543909047";
 const TICKET_CATEGORY_ID = "1476753645864357990";
 
-// ================= RULE CONTENT =================
+// ================= RULE TEXT (TICK STYLE) =================
 
 const DISCORD_RULES = `
-**1. Respect Everyone**
-No harassment, hate speech, or discrimination.
+### 📜 Discord Rules
 
-**2. No Toxic Behaviour**
-No threats, baiting, or excessive arguing.
+✅ **Be Respectful**  
+No harassment, discrimination, or hate speech.
 
-**3. Appropriate Content Only**
+✅ **No Toxic Behaviour**  
+Threats, baiting, trolling, or excessive arguing is prohibited.
+
+✅ **Appropriate Content Only**  
 No NSFW, illegal, or extremist content.
 
-**4. No Spam or Advertising**
-Unless permitted by staff.
+✅ **No Spam or Advertising**  
+Including DMs or links without permission.
 
-**5. Follow Staff Instructions**
-Staff decisions are final.
+✅ **Follow Staff Instructions**  
+Staff decisions are final. Open a ticket if needed.
 
-**6. Correct Channel Usage**
-Use channels as intended.
+✅ **Use Correct Channels**  
+Post content where it belongs.
 
-**7. No Exploits**
-Do not abuse bugs or loopholes.
+✅ **No Exploits or Abuse**  
+Do not abuse bugs or permissions.
 
-**8. English Only**
+✅ **English Only**  
 Public channels must remain English.
 `;
 
 const RP_RULES = `
-**1. Realistic UK Roleplay**
-All RP must reflect a UK setting.
+### 🚓 Roleplay Rules
 
-**2. No RDM / VDM**
-All violence must be roleplay-led.
+✅ **Realistic UK Roleplay**  
+All scenarios must reflect realistic UK standards.
 
-**3. Value Your Life**
-Fear RP is mandatory.
+✅ **No RDM / VDM**  
+Violence requires valid roleplay reasoning.
 
-**4. No Fail RP**
-Unrealistic behaviour is prohibited.
+✅ **Value Your Life**  
+Fear RP is mandatory at all times.
 
-**5. New Life Rule**
-You forget events after death.
+✅ **No Fail RP**  
+Unrealistic actions are not allowed.
 
-**6. Emergency Services**
-Must follow UK procedures.
+✅ **New Life Rule**  
+Previous events are forgotten after death.
 
-**7. No Metagaming**
-OOC info cannot be used IC.
+✅ **Emergency Services Conduct**  
+Follow correct UK procedures.
 
-**8. Staff Authority**
+✅ **No Metagaming**  
+OOC information cannot be used IC.
+
+✅ **Staff Authority**  
 Staff may intervene at any time.
 `;
 
-// ================= PANEL BUILDER =================
+// ================= RULES PANEL =================
 
-function buildPanel(type = "discord") {
+function buildRulesPanel(type = "discord") {
   const embed = new EmbedBuilder()
     .setColor(0x2b2d31)
-    .setTitle("Boroughs of London RP — Rules")
-    .setImage("https://media1.tenor.com/m/mL4Xv7bsMNAAAAAC/londonroleplay-london.gif")
-    .setFooter({ text: "Boroughs of London RP • Official Panel" });
-
-  embed.setDescription(type === "discord" ? DISCORD_RULES : RP_RULES);
+    .setTitle("Boroughs of London Roleplay")
+    .setImage("https://images.unsplash.com/photo-1505761671935-60b3a7427bad?q=80&w=1200&auto=format&fit=crop")
+    .setDescription(type === "discord" ? DISCORD_RULES : RP_RULES)
+    .setFooter({ text: "Boroughs of London RP • Official Rules" });
 
   const menu = new StringSelectMenuBuilder()
     .setCustomId("rules_select")
-    .setPlaceholder("Select a rules category")
+    .setPlaceholder("Select rules category")
     .addOptions(
       { label: "Discord Rules", value: "discord", emoji: "📜" },
-      { label: "In-Game Roleplay Rules", value: "rp", emoji: "🚓" }
+      { label: "Roleplay Rules", value: "rp", emoji: "🚓" }
     );
 
   return {
@@ -111,7 +113,7 @@ function buildPanel(type = "discord") {
 const commands = [
   new SlashCommandBuilder()
     .setName("panel")
-    .setDescription("Send the onboarding rules panel")
+    .setDescription("Send the rules onboarding panel")
     .addChannelOption(o =>
       o.setName("channel")
         .setDescription("Channel to send the panel")
@@ -120,30 +122,93 @@ const commands = [
     ),
 
   new SlashCommandBuilder()
+    .setName("ticketpanel")
+    .setDescription("Send the ticket panel")
+    .addChannelOption(o =>
+      o.setName("channel")
+        .setDescription("Channel to send the ticket panel")
+        .addChannelTypes(ChannelType.GuildText)
+        .setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
     .setName("ticket")
     .setDescription("Open a support ticket"),
+
+  new SlashCommandBuilder()
+    .setName("staffreview")
+    .setDescription("Leave a staff review"),
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);
-
 (async () => {
   await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-  console.log("Commands registered");
 })();
 
 // ================= INTERACTIONS =================
 
 client.on("interactionCreate", async interaction => {
 
-  // /panel
-  if (interaction.isChatInputCommand() && interaction.commandName === "panel") {
-    const channel = interaction.options.getChannel("channel");
-    await channel.send(buildPanel());
-    return interaction.reply({ content: "✅ Panel sent.", ephemeral: true });
+  if (interaction.isChatInputCommand()) {
+
+    if (interaction.commandName === "panel") {
+      const channel = interaction.options.getChannel("channel");
+      await channel.send(buildRulesPanel());
+      return interaction.reply({ content: "✅ Rules panel sent.", ephemeral: true });
+    }
+
+    if (interaction.commandName === "ticketpanel") {
+      const embed = new EmbedBuilder()
+        .setColor(0x2b2d31)
+        .setTitle("🎫 Support Tickets")
+        .setDescription("Click below to open a support ticket.");
+
+      const button = new ButtonBuilder()
+        .setCustomId("open_ticket")
+        .setLabel("Open Ticket")
+        .setStyle(ButtonStyle.Primary);
+
+      await interaction.options.getChannel("channel").send({
+        embeds: [embed],
+        components: [new ActionRowBuilder().addComponents(button)],
+      });
+
+      return interaction.reply({ content: "✅ Ticket panel sent.", ephemeral: true });
+    }
+
+    if (interaction.commandName === "ticket") {
+      interaction.customId = "open_ticket";
+    }
+
+    if (interaction.commandName === "staffreview") {
+      const modal = new ModalBuilder()
+        .setCustomId("staff_review")
+        .setTitle("Staff Review");
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId("staff")
+            .setLabel("Staff Member (@mention)")
+            .setStyle(TextInputStyle.Short)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId("review")
+            .setLabel("Your Review")
+            .setStyle(TextInputStyle.Paragraph)
+        )
+      );
+
+      return interaction.showModal(modal);
+    }
   }
 
-  // /ticket
-  if (interaction.isChatInputCommand() && interaction.commandName === "ticket") {
+  if (interaction.isStringSelectMenu() && interaction.customId === "rules_select") {
+    return interaction.update(buildRulesPanel(interaction.values[0]));
+  }
+
+  if (interaction.isButton() && interaction.customId === "open_ticket") {
     const channel = await interaction.guild.channels.create({
       name: `ticket-${interaction.user.username}`,
       type: ChannelType.GuildText,
@@ -155,53 +220,40 @@ client.on("interactionCreate", async interaction => {
       ],
     });
 
-    const embed = new EmbedBuilder()
-      .setTitle("🎫 Support Ticket")
-      .setDescription("A staff member will assist you shortly.")
-      .setColor(0x2b2d31);
-
     const buttons = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("claim").setLabel("Claim").setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId("lock").setLabel("Lock").setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId("close").setLabel("Close").setStyle(ButtonStyle.Danger),
     );
 
-    await channel.send({ embeds: [embed], components: [buttons] });
-    return interaction.reply({ content: `🎫 Ticket created: ${channel}`, ephemeral: true });
+    await channel.send({ content: "🎫 Ticket opened.", components: [buttons] });
+    return interaction.reply({ content: `Ticket created: ${channel}`, ephemeral: true });
   }
 
-  // RULE DROPDOWN
-  if (interaction.isStringSelectMenu() && interaction.customId === "rules_select") {
-    return interaction.update(buildPanel(interaction.values[0]));
+  if (interaction.isButton() && interaction.customId === "close") {
+    const embed = new EmbedBuilder()
+      .setColor(0x2b2d31)
+      .setDescription("✅ Ticket closed.\n\nIf this staff member was helpful, feel free to leave a review using `/staffreview`.");
+
+    await interaction.channel.send({ embeds: [embed] });
+    setTimeout(() => interaction.channel.delete(), 5000);
   }
 
-  // TICKET BUTTONS
-  if (interaction.isButton()) {
-    const channel = interaction.channel;
+  if (interaction.isModalSubmit() && interaction.customId === "staff_review") {
+    const embed = new EmbedBuilder()
+      .setColor(0x2b2d31)
+      .setTitle("⭐ Staff Review")
+      .addFields(
+        { name: "Reviewer", value: `${interaction.user}`, inline: true },
+        { name: "Staff Member", value: interaction.fields.getTextInputValue("staff"), inline: true },
+        { name: "Review", value: interaction.fields.getTextInputValue("review") }
+      )
+      .setThumbnail(interaction.user.displayAvatarURL());
 
-    if (interaction.customId === "claim") {
-      await channel.permissionOverwrites.edit(interaction.user.id, { SendMessages: true });
-      return interaction.reply({ content: `🟢 Ticket claimed by ${interaction.user}`, ephemeral: false });
-    }
-
-    if (interaction.customId === "lock") {
-      await channel.permissionOverwrites.edit(STAFF_ROLE_ID, { SendMessages: false });
-      return interaction.reply({ content: "🔒 Ticket locked.", ephemeral: false });
-    }
-
-    if (interaction.customId === "close") {
-      const reviewEmbed = new EmbedBuilder()
-        .setColor(0x2b2d31)
-        .setDescription("✅ Ticket closed.\n\nIf you found this staff member helpful, feel free to leave a review using `/staffreview`.");
-
-      await channel.send({ embeds: [reviewEmbed] });
-      setTimeout(() => channel.delete(), 5000);
-    }
+    return interaction.reply({ embeds: [embed] });
   }
 });
 
 client.login(TOKEN);
-
 
 
 

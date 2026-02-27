@@ -2,212 +2,200 @@ const {
   Client,
   GatewayIntentBits,
   SlashCommandBuilder,
-  REST,
   Routes,
+  REST,
   EmbedBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
   ActionRowBuilder,
+  StringSelectMenuBuilder,
+  ChannelSelectMenuBuilder,
+  ChannelType,
   ButtonBuilder,
   ButtonStyle,
   PermissionsBitField,
-  ChannelType,
-} = require('discord.js');
+} = require("discord.js");
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+  ],
+});
 
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 
-const STAFF_ROLE_ID = '1476733750543909047';
-const VERIFIED_ROLE_ID = '1476733794215133276';
+const STAFF_ROLE_ID = "PUT_STAFF_ROLE_ID_HERE";
+const TICKET_CATEGORY_ID = "PUT_CATEGORY_ID_HERE";
 
-const DENY_TIMEOUT_MS = 10 * 60 * 1000;
+// ================= RULE CONTENT =================
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const DISCORD_RULES = `
+**1. Respect Everyone**
+No harassment, hate speech, or discrimination.
 
-/* ───────── COMMANDS ───────── */
+**2. No Toxic Behaviour**
+No threats, baiting, or excessive arguing.
+
+**3. Appropriate Content Only**
+No NSFW, illegal, or extremist content.
+
+**4. No Spam or Advertising**
+Unless permitted by staff.
+
+**5. Follow Staff Instructions**
+Staff decisions are final.
+
+**6. Correct Channel Usage**
+Use channels as intended.
+
+**7. No Exploits**
+Do not abuse bugs or loopholes.
+
+**8. English Only**
+Public channels must remain English.
+`;
+
+const RP_RULES = `
+**1. Realistic UK Roleplay**
+All RP must reflect a UK setting.
+
+**2. No RDM / VDM**
+All violence must be roleplay-led.
+
+**3. Value Your Life**
+Fear RP is mandatory.
+
+**4. No Fail RP**
+Unrealistic behaviour is prohibited.
+
+**5. New Life Rule**
+You forget events after death.
+
+**6. Emergency Services**
+Must follow UK procedures.
+
+**7. No Metagaming**
+OOC info cannot be used IC.
+
+**8. Staff Authority**
+Staff may intervene at any time.
+`;
+
+// ================= PANEL BUILDER =================
+
+function buildPanel(type = "discord") {
+  const embed = new EmbedBuilder()
+    .setColor(0x2b2d31)
+    .setTitle("Boroughs of London RP — Rules")
+    .setImage("https://media1.tenor.com/m/mL4Xv7bsMNAAAAAC/londonroleplay-london.gif")
+    .setFooter({ text: "Boroughs of London RP • Official Panel" });
+
+  embed.setDescription(type === "discord" ? DISCORD_RULES : RP_RULES);
+
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId("rules_select")
+    .setPlaceholder("Select a rules category")
+    .addOptions(
+      { label: "Discord Rules", value: "discord", emoji: "📜" },
+      { label: "In-Game Roleplay Rules", value: "rp", emoji: "🚓" }
+    );
+
+  return {
+    embeds: [embed],
+    components: [new ActionRowBuilder().addComponents(menu)],
+  };
+}
+
+// ================= COMMANDS =================
+
 const commands = [
-  new SlashCommandBuilder().setName('rules').setDescription('View server rules'),
   new SlashCommandBuilder()
-    .setName('staffreview')
-    .setDescription('Submit a staff review')
-    .addUserOption(o =>
-      o.setName('staff').setDescription('Staff member').setRequired(true)
+    .setName("panel")
+    .setDescription("Send the onboarding rules panel")
+    .addChannelOption(o =>
+      o.setName("channel")
+        .setDescription("Channel to send the panel")
+        .addChannelTypes(ChannelType.GuildText)
+        .setRequired(true)
     ),
-  new SlashCommandBuilder().setName('ticket').setDescription('Open a support ticket'),
+
+  new SlashCommandBuilder()
+    .setName("ticket")
+    .setDescription("Open a support ticket"),
 ].map(c => c.toJSON());
 
-const rest = new REST({ version: '10' }).setToken(TOKEN);
+const rest = new REST({ version: "10" }).setToken(TOKEN);
 
 (async () => {
   await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-  console.log('✅ Commands registered');
+  console.log("Commands registered");
 })();
 
-/* ───────── READY ───────── */
-client.once('ready', () => {
-  console.log(`🤖 Logged in as ${client.user.tag}`);
-});
+// ================= INTERACTIONS =================
 
-/* ───────── TICKET STATE ───────── */
-const ticketClaims = new Map();
+client.on("interactionCreate", async interaction => {
 
-/* ───────── INTERACTIONS ───────── */
-client.on('interactionCreate', async interaction => {
-  /* ───── /RULES ───── */
-  if (interaction.isChatInputCommand() && interaction.commandName === 'rules') {
-    await interaction.deferReply();
-
-    const embed = new EmbedBuilder()
-      .setTitle('📜 Boroughs of London RP – Rules')
-      .setImage('https://media1.tenor.com/m/mL4Xv7bsMNAAAAAC/londonroleplay-london.gif')
-      .setDescription(
-        '**Serious UK Roleplay Server**\n\n' +
-        'By participating, you agree to follow all rules below.\n\n' +
-        '**General Roleplay Rules**\n' +
-        '• No RDM / VDM\n• FearRP is mandatory\n• No Fail RP\n• No Metagaming\n• No Powergaming\n• New Life Rule applies\n\n' +
-        '**Emergency Services**\n' +
-        '• Follow realistic UK procedures\n• No abuse of powers\n• Corruption RP is staff-approved only\n\n' +
-        '**Vehicles & Traffic**\n' +
-        '• Realistic UK driving\n• No unrealistic speeds or stunts\n• Pull over when lawfully stopped\n\n' +
-        '**Firearms & Violence**\n' +
-        '• Rare and realistic\n• Escalation required\n• No revenge killing\n\n' +
-        '**Community Conduct**\n' +
-        '• Be respectful\n• No harassment or discrimination\n• Follow staff instructions\n\n' +
-        '**Punishments**\n' +
-        '• Scale with severity\n• Staff decisions are final'
-      )
-      .setColor(0x2f3136);
-
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('agree_rules').setLabel('✅ I Agree').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('deny_rules').setLabel('❌ I Don’t Agree').setStyle(ButtonStyle.Danger)
-    );
-
-    return interaction.editReply({ embeds: [embed], components: [row] });
+  // /panel
+  if (interaction.isChatInputCommand() && interaction.commandName === "panel") {
+    const channel = interaction.options.getChannel("channel");
+    await channel.send(buildPanel());
+    return interaction.reply({ content: "✅ Panel sent.", ephemeral: true });
   }
 
-  /* ───── RULE BUTTONS ───── */
-  if (interaction.isButton() && interaction.customId === 'agree_rules') {
-    await interaction.deferReply({ ephemeral: true });
-    const role = interaction.guild.roles.cache.get(VERIFIED_ROLE_ID);
-    if (role) await interaction.member.roles.add(role);
-    return interaction.editReply({ content: '✅ Access granted.' });
-  }
-
-  if (interaction.isButton() && interaction.customId === 'deny_rules') {
-    await interaction.deferReply({ ephemeral: true });
-    await interaction.member.timeout(DENY_TIMEOUT_MS, 'Did not agree to rules');
-    return interaction.editReply({ content: '❌ You have been muted.' });
-  }
-
-  /* ───── /STAFFREVIEW ───── */
-  if (interaction.isChatInputCommand() && interaction.commandName === 'staffreview') {
-    const staff = interaction.options.getUser('staff');
-
-    const modal = new ModalBuilder()
-      .setCustomId(`staffreview_${staff.id}`)
-      .setTitle('Staff Review');
-
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder()
-          .setCustomId('review')
-          .setLabel('Detailed review (you may @ people)')
-          .setStyle(TextInputStyle.Paragraph)
-          .setRequired(true)
-      )
-    );
-
-    return interaction.showModal(modal);
-  }
-
-  if (interaction.isModalSubmit() && interaction.customId.startsWith('staffreview_')) {
-    await interaction.deferReply();
-
-    const staffId = interaction.customId.split('_')[1];
-    const review = interaction.fields.getTextInputValue('review');
-    const staff = await client.users.fetch(staffId);
-
-    const embed = new EmbedBuilder()
-      .setTitle('📝 Staff Review')
-      .setThumbnail(staff.displayAvatarURL())
-      .addFields(
-        { name: 'Staff Member', value: staff.toString() },
-        { name: 'Reviewer', value: interaction.user.toString() },
-        { name: 'Review', value: review }
-      )
-      .setTimestamp()
-      .setColor(0x5865f2);
-
-    await interaction.channel.send({ embeds: [embed] });
-    return interaction.editReply({ content: '✅ Review submitted.' });
-  }
-
-  /* ───── /TICKET ───── */
-  if (interaction.isChatInputCommand() && interaction.commandName === 'ticket') {
-    await interaction.deferReply({ ephemeral: true });
-
+  // /ticket
+  if (interaction.isChatInputCommand() && interaction.commandName === "ticket") {
     const channel = await interaction.guild.channels.create({
       name: `ticket-${interaction.user.username}`,
       type: ChannelType.GuildText,
+      parent: TICKET_CATEGORY_ID || null,
       permissionOverwrites: [
         { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
         { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel] },
+        { id: STAFF_ROLE_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
       ],
     });
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('ticket_claim').setLabel('🎫 Claim').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('ticket_lock').setLabel('🔒 Lock').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('ticket_close').setLabel('❌ Close').setStyle(ButtonStyle.Danger)
+    const embed = new EmbedBuilder()
+      .setTitle("🎫 Support Ticket")
+      .setDescription("A staff member will assist you shortly.")
+      .setColor(0x2b2d31);
+
+    const buttons = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("claim").setLabel("Claim").setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId("lock").setLabel("Lock").setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId("close").setLabel("Close").setStyle(ButtonStyle.Danger),
     );
 
-    await channel.send({ content: 'Support ticket opened.', components: [row] });
-    return interaction.editReply({ content: `🎫 Ticket created: ${channel}` });
+    await channel.send({ embeds: [embed], components: [buttons] });
+    return interaction.reply({ content: `🎫 Ticket created: ${channel}`, ephemeral: true });
   }
 
-  /* ───── TICKET BUTTONS ───── */
-  if (interaction.isButton() && interaction.customId.startsWith('ticket_')) {
-    await interaction.deferReply({ ephemeral: true });
+  // RULE DROPDOWN
+  if (interaction.isStringSelectMenu() && interaction.customId === "rules_select") {
+    return interaction.update(buildPanel(interaction.values[0]));
+  }
+
+  // TICKET BUTTONS
+  if (interaction.isButton()) {
     const channel = interaction.channel;
 
-    if (interaction.customId === 'ticket_claim') {
-      if (ticketClaims.has(channel.id)) {
-        return interaction.editReply({ content: '❌ Ticket already claimed.' });
-      }
-      ticketClaims.set(channel.id, interaction.user.id);
-      return interaction.editReply({ content: `🎫 Ticket claimed by ${interaction.user}` });
+    if (interaction.customId === "claim") {
+      await channel.permissionOverwrites.edit(interaction.user.id, { SendMessages: true });
+      return interaction.reply({ content: `🟢 Ticket claimed by ${interaction.user}`, ephemeral: false });
     }
 
-    if (interaction.customId === 'ticket_lock') {
-      if (ticketClaims.get(channel.id) !== interaction.user.id) {
-        return interaction.editReply({ content: '❌ Only the claiming staff member can lock this ticket.' });
-      }
-      await channel.permissionOverwrites.edit(STAFF_ROLE_ID, { ViewChannel: false });
-      return interaction.editReply({ content: '🔒 Ticket locked.' });
+    if (interaction.customId === "lock") {
+      await channel.permissionOverwrites.edit(STAFF_ROLE_ID, { SendMessages: false });
+      return interaction.reply({ content: "🔒 Ticket locked.", ephemeral: false });
     }
 
-    if (interaction.customId === 'ticket_close') {
-      const staffId = ticketClaims.get(channel.id);
-      const staffMention = staffId ? `<@${staffId}>` : 'the staff team';
+    if (interaction.customId === "close") {
+      const reviewEmbed = new EmbedBuilder()
+        .setColor(0x2b2d31)
+        .setDescription("✅ Ticket closed.\n\nIf you found this staff member helpful, feel free to leave a review using `/staffreview`.");
 
-      const embed = new EmbedBuilder()
-        .setTitle('✅ Ticket Closed')
-        .setDescription(
-          `This ticket has now been closed.\n\n` +
-          `If you found **${staffMention}** helpful, feel free to leave a review using:\n\n` +
-          '`/staffreview`'
-        )
-        .setColor(0x2ecc71)
-        .setTimestamp();
-
-      await channel.send({ embeds: [embed] });
-
-      setTimeout(() => {
-        channel.delete().catch(() => {});
-      }, 5000);
+      await channel.send({ embeds: [reviewEmbed] });
+      setTimeout(() => channel.delete(), 5000);
     }
   }
 });

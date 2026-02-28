@@ -29,60 +29,96 @@ const STAFF_REVIEW_CHANNEL_ID ="1476991236085907456";
 // ================= RULE TEXT =================
 
 const DISCORD_RULES = `
-### 📜 Discord Rules
+### 📝 Discord Rules
 
 ✅ **Be Respectful**  
-No harassment, discrimination, or hate speech.
+Treat all members with respect. Harassment, discrimination, hate speech, derogatory language, or targeted insults are strictly prohibited. This includes voice chats, text channels, and DMs related to the server.
 
 ✅ **No Toxic Behaviour**  
-No threats, baiting, or trolling.
+Do not engage in threats, baiting, trolling, excessive arguing, or intentionally starting drama. Keep the community positive and welcoming.
 
 ✅ **Appropriate Content Only**  
-No NSFW, illegal, or extremist content.
+No NSFW, sexually explicit, illegal, extremist, or otherwise inappropriate content. This includes images, gifs, videos, status messages, and profile pictures.
 
 ✅ **No Spam or Advertising**  
-Without staff permission.
+Avoid message spamming, ping spamming, or channel flooding. Advertising any product, server, or social media requires staff approval.
 
 ✅ **Follow Staff Instructions**  
-Staff decisions are final.
+Staff decisions are final. Failure to comply with staff direction may result in moderation actions.
 
 ✅ **Use Correct Channels**  
-Post where content belongs.
+Post content in the appropriate channels. Repeated misuse of channels may lead to warnings or restrictions.
 
 ✅ **No Exploits or Abuse**  
-Do not abuse bugs or permissions.
+Do not attempt to exploit server bots, permissions, or Discord vulnerabilities. Abusing loopholes will result in penalties.
 
 ✅ **English Only**  
-Public channels must remain English.
+All public channels must remain English for moderation purposes. Private messages may be in any language, as long as they follow Discord ToS.
+
 `;
 
 const RP_RULES = `
-### 🚓 Roleplay Rules
+### 🎭 Roleplay Rules
 
-✅ **Realistic New York Roleplay**  
-New York-based realistic scenarios only.
-
-✅ **No RDM / VDM**  
-Violence requires roleplay reasoning.
-
-✅ **Value Your Life**  
-Fear RP is mandatory.
+✅ **Value Your Life (VYL)**  
+Your character must act realistically and value their life in dangerous situations. Fear RP is mandatory—running toward gunfire, charging armed individuals, or acting invincible is not allowed.
 
 ✅ **No Fail RP**  
-Unrealistic behaviour is prohibited.
+Do not perform unrealistic actions, powergame, or force actions onto others. Examples include surviving impossible injuries, ignoring injuries, or doing things your character physically couldn’t.
 
-✅ **New Life Rule**  
-Events before death are forgotten.
+✅ **New Life Rule (NLR)**  
+Upon death, your character forgets all events that led to it. You may not return to the scene of death for at least 15 minutes, and you may not seek revenge for events you no longer remember.
 
 ✅ **Emergency Services Conduct**  
-Follow UK procedures.
+If playing police, EMS, or fire, you must follow professional UK-style procedures. Abuse of power, unrealistic behaviour, or ignoring proper protocol is not allowed.
 
 ✅ **No Metagaming**  
-OOC info may not be used IC.
+Do not use out-of-character information in-character. This includes streams, DMs, Discord chat, or anything your character wouldn’t logically know.
 
 ✅ **Staff Authority**  
-Staff may intervene anytime.
+Staff may intervene in RP at any time. Failure to comply may result in removal from a scene or further action.
+
+---
+
+### 🌆 City Roleplay Rules
+
+✅ **Realistic New York Roleplay**  
+All roleplay must be grounded in realistic New York-based settings, behaviours, and environment. No supernatural powers, unrealistic wealth, or over-the-top behaviour.
+
+✅ **No RDM / VDM**  
+• RDM — Randomly killing players without valid RP reason  
+• VDM — Using a vehicle to harm players without valid RP  
+Both are strictly prohibited.
+
+✅ **Proper Initiation**  
+Before engaging in violence or crime, proper RP initiation must occur. Clear actions, dialogue, and escalation must be present.
+
+✅ **Crime Limitations**  
+Major crimes (robberies, kidnappings, etc.) require proper planning, realistic execution, and enough police presence online.
+
+---
+
+### 🧑‍⚖️ Additional RP Rules
+
+✅ **No Powergaming**  
+You cannot force actions, outcomes, or unrealistic abilities onto other players.
+
+✅ **No Cop Baiting**  
+Do not intentionally provoke police for no RP reason.
+
+✅ **No Revenge RP**  
+Revenge must follow realistic motivations. You may not instantly hunt someone because of OOC emotions.
+
+✅ **Respect Cooldowns**  
+Large crimes have cooldowns to maintain balance and fairness.
+
+---
+
+### ⚠️ Final Rule
+
+🚫 **Breaking any rules may result in kicks, warnings, timeouts, or bans at staff discretion.**
 `;
+
 
 // ================= RULES PANEL =================
 
@@ -267,6 +303,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 

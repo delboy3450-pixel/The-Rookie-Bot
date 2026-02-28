@@ -31,7 +31,7 @@ const STAFF_REVIEW_CHANNEL_ID ="1476991236085907456";
 const DISCORD_RULES = `
 ### 📝 Discord Rules
 
-✅ **Be Respectful**  
+@everyone ✅ **Be Respectful**  
 Treat all members with respect. Harassment, discrimination, hate speech, derogatory language, or targeted insults are strictly prohibited. This includes voice chats, text channels, and DMs related to the server.
 
 ✅ **No Toxic Behaviour**  
@@ -303,6 +303,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 

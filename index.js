@@ -124,7 +124,7 @@ Large crimes have cooldowns to maintain balance and fairness.
 
 function buildRulesPanel(type = "discord") {
   const embed = new EmbedBuilder()
-    .setColor(0x2b2d31)
+    .setColor(0xfc7b03)
     .setTitle("New York State Roleplay")
     .setImage("https://cdn.discordapp.com/attachments/1476976362584801380/1477332609888555201/template.png?ex=69a460b5&is=69a30f35&hm=b804ff3f12aa8aa01003a11d6cd7437247ff1f06222287f9cef0fb71ea74d5de&")
     .setDescription(type === "discord" ? DISCORD_RULES : RP_RULES)
@@ -303,6 +303,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 

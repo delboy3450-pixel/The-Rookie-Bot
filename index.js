@@ -23,9 +23,9 @@ const client = new Client({
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 
-const STAFF_ROLE_ID = "1476733750543909047";
-const TICKET_CATEGORY_ID = "1476753645864357990";
-const STAFF_REVIEW_CHANNEL_ID ="1476991236085907456";
+const STAFF_ROLE_ID = "1477489999636336711";
+const TICKET_CATEGORY_ID = "1465401064827257015";
+const STAFF_REVIEW_CHANNEL_ID ="1477520760833839248";
 // ================= RULE TEXT =================
 
 const DISCORD_RULES = `
@@ -70,7 +70,7 @@ Do not perform unrealistic actions, powergame, or force actions onto others. Exa
 Upon death, your character forgets all events that led to it. You may not return to the scene of death for at least 15 minutes, and you may not seek revenge for events you no longer remember.
 
 ✅ **Emergency Services Conduct**  
-If playing police, EMS, or fire, you must follow professional UK-style procedures. Abuse of power, unrealistic behaviour, or ignoring proper protocol is not allowed.
+If playing police, EMS, or fire, you must follow professional PSP procedures. Abuse of power, unrealistic behaviour, or ignoring proper protocol is not allowed.
 
 ✅ **No Metagaming**  
 Do not use out-of-character information in-character. This includes streams, DMs, Discord chat, or anything your character wouldn’t logically know.
@@ -125,8 +125,8 @@ Large crimes have cooldowns to maintain balance and fairness.
 function buildRulesPanel(type = "discord") {
   const embed = new EmbedBuilder()
     .setColor(0xfc7b03)
-    .setTitle("**New York State Roleplay**")
-    .setImage("https://cdn.discordapp.com/attachments/1476976362584801380/1477332609888555201/template.png?ex=69a460b5&is=69a30f35&hm=b804ff3f12aa8aa01003a11d6cd7437247ff1f06222287f9cef0fb71ea74d5de&")
+    .setTitle("**PSRP**")
+    .setImage("")
     .setDescription(type === "discord" ? DISCORD_RULES : RP_RULES)
     .setFooter({ text: "New York State Roleplay • Official Rules" });
 
@@ -303,6 +303,7 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(TOKEN);
+
 
 
 
